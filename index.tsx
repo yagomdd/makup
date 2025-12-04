@@ -980,7 +980,7 @@ const LoginScreen = () => {
         <div className="login-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
              <rect width="100" height="100" rx="20" fill="#e5a9c5"/>
-             <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="60" fill="white" font-family="Poppins, sans-serif" font-weight="bold">M</text>
+             <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontSize="60" fill="white" fontFamily="Poppins, sans-serif" fontWeight="bold">M</text>
           </svg>
         </div>
         <h2>{isRegistering ? t('create_account') : t('welcome')}</h2>

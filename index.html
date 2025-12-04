@@ -287,6 +287,9 @@
       background-color: var(--accent-color);
       color: white;
     }
+    .success {
+      color: #5cb85c;
+    }
     .danger {
         color: #d9534f;
     }
@@ -414,6 +417,29 @@
         text-align: center;
     }
     
+    /* LANGUAGE SELECTOR */
+    .lang-container {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+        justify-content: center;
+    }
+    .lang-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        opacity: 0.6;
+        color: var(--text-color);
+        padding: 5px;
+        border-radius: 5px;
+    }
+    .lang-btn.active {
+        opacity: 1;
+        font-weight: bold;
+        background-color: rgba(255,255,255,0.2);
+    }
+    
     /* Settings FAB */
     .settings-fab {
         position: fixed;
@@ -524,6 +550,16 @@
         margin-top: 20px;
         display: flex;
         gap: 15px;
+    }
+    .admin-list-section {
+        margin-bottom: 20px;
+    }
+    .admin-list-section h4 {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-bottom: 10px;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        padding-bottom: 5px;
     }
   </style>
 <script type="importmap">

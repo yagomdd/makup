@@ -18,6 +18,7 @@ import {
   onSnapshot, 
   query,
   getDocs,
+  getDoc,
   where
 } from 'firebase/firestore';
 
@@ -289,6 +290,65 @@ const CategoryModal = ({ onSave, onCancel, category }: { onSave: (name: string) 
   );
 };
 
+const ItemDetailsScreen = ({ item, onBack, onEdit, onDelete }: { item: MakeupItem, onBack: () => void, onEdit: () => void, onDelete: () => void }) => {
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    return (
+        <div className="screen">
+            <div className="header">
+                <button onClick={onBack} className="back-btn" aria-label="Voltar">←</button>
+                <h2>Detalhes</h2>
+                <div style={{width: '40px'}}></div> {/* Spacer */}
+            </div>
+
+            <div className="details-container">
+                <div className="details-image-container neumorphic">
+                    {item.images.length > 0 ? (
+                        <img src={item.images[0]} alt={item.title} className="details-image" />
+                    ) : (
+                        <div className="details-no-image">Sem foto</div>
+                    )}
+                </div>
+
+                <div className="details-card neumorphic">
+                    <h3 className="details-title">{item.title}</h3>
+                    {item.marca && <p className="details-brand">{item.marca}</p>}
+                    
+                    <div className="details-tags">
+                        {item.tipo && <span className="tag neumorphic-inset">{item.tipo}</span>}
+                        {item.cor && <span className="tag neumorphic-inset">{item.cor}</span>}
+                    </div>
+
+                    {item.notes && (
+                        <div className="details-notes neumorphic-inset">
+                            <label>Notas:</label>
+                            <p>{item.notes}</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="details-actions">
+                 <button onClick={() => setShowDeleteModal(true)} className="modal-btn neumorphic danger">
+                    Excluir
+                 </button>
+                 <button onClick={onEdit} className="modal-btn neumorphic primary">
+                    Editar
+                 </button>
+            </div>
+
+            {showDeleteModal && (
+                <ConfirmModal 
+                    title="Excluir Item"
+                    message="Tem certeza que deseja excluir este item?"
+                    onCancel={() => setShowDeleteModal(false)}
+                    onConfirm={onDelete}
+                />
+            )}
+        </div>
+    );
+};
+
 const ItemForm = ({ onSave, onCancel, onDelete, item, categoryId }: { onSave: (item: Omit<MakeupItem, 'id' | 'categoryId' | 'dateAdded'>, images: string[]) => void, onCancel: () => void, onDelete?: () => void, item?: MakeupItem, categoryId: string }) => {
   const [title, setTitle] = useState(item?.title || '');
   const [notes, setNotes] = useState(item?.notes || '');
@@ -334,9 +394,6 @@ const ItemForm = ({ onSave, onCancel, onDelete, item, categoryId }: { onSave: (i
           <button onClick={onCancel} className="back-btn" aria-label="Voltar">←</button>
           <h2>{item ? 'Editar Item' : 'Adicionar Item'}</h2>
           <div style={{ display: 'flex', gap: '10px' }}>
-             {item && onDelete && (
-                 <button onClick={handleDeleteClick} className="icon-btn delete" aria-label="Excluir item">×</button>
-             )}
              <button onClick={handleSave} className="fab neumorphic" style={{ width: '40px', height: '40px', fontSize: '20px' }} aria-label="Salvar item">✓</button>
           </div>
         </div>
@@ -455,11 +512,14 @@ const UserListModal = ({ onClose }: { onClose: () => void }) => {
     } else if (db) {
         const fetchUsers = async () => {
             try {
+                // Ensure the users collection is readable
                 const usersSnap = await getDocs(collection(db, 'users'));
                 const userList = usersSnap.docs.map(doc => doc.data().email);
+                console.log("Usuarios encontrados:", userList);
                 setUsers(userList);
             } catch(e) {
                 console.error("Erro ao buscar usuários do firebase", e);
+                alert("Erro ao buscar usuários. Verifique o console e as regras do Firebase.");
             }
         };
         fetchUsers();
@@ -482,10 +542,7 @@ const UserListModal = ({ onClose }: { onClose: () => void }) => {
               // 3. Update list
               setUsers(prev => prev.filter(email => email !== userToDelete));
           } else if (db) {
-              // Firebase delete logic (more complex, requires finding user ID from email first)
-              // NOTE: In a real app you need Cloud Functions to delete auth users.
-              // Here we just delete the data document from 'users' collection and their inventory
-              
+              // Firebase delete logic
               const usersRef = collection(db, 'users');
               const q = query(usersRef, where("email", "==", userToDelete));
               const querySnapshot = await getDocs(q);
@@ -494,10 +551,12 @@ const UserListModal = ({ onClose }: { onClose: () => void }) => {
                   const userDoc = querySnapshot.docs[0];
                   const uid = userDoc.id;
                   
-                  // Delete user record
+                  // Delete user record from 'users' collection
                   await deleteDoc(doc(db, 'users', uid));
 
-                  // Delete items and categories (Requires client-side batching or iterating)
+                  // Note: The actual Auth user account cannot be deleted from client SDK 
+                  // without the user re-authenticating. This only deletes their data.
+                  
                   const itemsRef = collection(db, `users/${uid}/items`);
                   const itemsSnap = await getDocs(itemsRef);
                   itemsSnap.forEach(d => deleteDoc(d.ref));
@@ -524,7 +583,7 @@ const UserListModal = ({ onClose }: { onClose: () => void }) => {
         </p>
         <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '20px' }}>
             {users.length === 0 ? (
-                <p style={{textAlign: 'center', opacity: 0.7}}>Nenhum usuário encontrado.</p>
+                <p style={{textAlign: 'center', opacity: 0.7}}>Nenhum usuário encontrado na lista.</p>
             ) : (
                 <ul style={{listStyle: 'none', padding: 0}}>
                     {users.map(email => (
@@ -559,7 +618,7 @@ const UserListModal = ({ onClose }: { onClose: () => void }) => {
       {userToDelete && (
           <ConfirmModal 
             title="Deletar Usuário"
-            message={`Tem certeza que deseja apagar o usuário ${userToDelete} e todos os seus itens?`}
+            message={`Tem certeza que deseja apagar os dados do usuário ${userToDelete}? (A conta de login permanecerá ativa até que ele a exclua)`}
             onCancel={() => setUserToDelete(null)}
             onConfirm={handleDeleteUser}
           />
@@ -699,6 +758,7 @@ interface ItemListScreenProps {
 
 const ItemListScreen = ({ category, items, onBack, onSaveItem, onDeleteItem, allItems }: ItemListScreenProps) => {
   const [editingItem, setEditingItem] = useState<MakeupItem | null | 'new'>(null);
+  const [viewingItem, setViewingItem] = useState<MakeupItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('dateAdded-desc');
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -741,6 +801,7 @@ const ItemListScreen = ({ category, items, onBack, onSaveItem, onDeleteItem, all
     return processedItems;
   }, [items, searchTerm, sortOrder, filters]);
 
+  // If editing, show form
   if (editingItem) {
     return (
       <ItemForm
@@ -750,13 +811,33 @@ const ItemListScreen = ({ category, items, onBack, onSaveItem, onDeleteItem, all
         onSave={(newItemData, newImages) => {
           onSaveItem(editingItem === 'new' ? null : editingItem, { ...newItemData, images: newImages });
           setEditingItem(null);
+          // If we were editing an existing item, go back to viewing it (or null if new)
+          if (editingItem !== 'new') {
+              setViewingItem(prev => prev ? {...prev, ...newItemData, images: newImages} : null);
+          }
         }}
         onDelete={editingItem !== 'new' ? () => {
             onDeleteItem(editingItem.id);
             setEditingItem(null);
+            setViewingItem(null);
         } : undefined}
       />
     );
+  }
+
+  // If viewing details, show details screen
+  if (viewingItem) {
+      return (
+          <ItemDetailsScreen 
+            item={viewingItem}
+            onBack={() => setViewingItem(null)}
+            onEdit={() => setEditingItem(viewingItem)}
+            onDelete={() => {
+                onDeleteItem(viewingItem.id);
+                setViewingItem(null);
+            }}
+          />
+      );
   }
 
   return (
@@ -792,7 +873,7 @@ const ItemListScreen = ({ category, items, onBack, onSaveItem, onDeleteItem, all
 
       <div className="item-grid">
         {filteredAndSortedItems.map(item => (
-          <div key={item.id} className="item-card neumorphic" onClick={() => setEditingItem(item)}>
+          <div key={item.id} className="item-card neumorphic" onClick={() => setViewingItem(item)}>
             <img src={item.images[0] || ''} alt={item.title} />
             <h4>{item.title}</h4>
             <p>{item.marca}</p>
@@ -1078,9 +1159,30 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (savedUser) setUser(JSON.parse(savedUser));
             setLoading(false);
         } else if (auth) {
-            const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                 if (firebaseUser) {
                     setUser({ email: firebaseUser.email || '', uid: firebaseUser.uid });
+                    
+                    // SELF-HEALING: Ensure user exists in the 'users' collection for Admin listing
+                    // This handles cases where users signed up before the admin feature existed
+                    if (db) {
+                        try {
+                            const userRef = doc(db, 'users', firebaseUser.uid);
+                            const userSnap = await getDoc(userRef);
+                            if (!userSnap.exists()) {
+                                await setDoc(userRef, {
+                                    email: firebaseUser.email,
+                                    uid: firebaseUser.uid,
+                                    createdAt: Date.now(),
+                                    lastLogin: Date.now()
+                                }, { merge: true });
+                                console.log("Usuário sincronizado com a lista de Admin");
+                            }
+                        } catch (e) {
+                            console.error("Erro ao sincronizar usuário:", e);
+                        }
+                    }
+
                 } else {
                     setUser(null);
                 }

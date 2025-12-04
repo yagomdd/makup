@@ -1,0 +1,7 @@
+{
+  "description": "Uma aplicação simples de inventário de maquiagem.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "name": "Inventário de Maquiagem"
+}

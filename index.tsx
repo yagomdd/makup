@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, createContext, useContext } from 'react';
 import { createRoot } from 'react-dom/client';
 import { initializeApp } from 'firebase/app';
@@ -6,8 +7,7 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  onAuthStateChanged,
-  User as FirebaseUser 
+  onAuthStateChanged
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -19,7 +19,6 @@ import {
   query,
   getDocs,
   getDoc,
-  where,
   updateDoc
 } from 'firebase/firestore';
 
@@ -34,11 +33,9 @@ const firebaseConfig = {
   measurementId: "G-YDEGDPSYHL"
 };
 
-// Verifica se a config é válida
 const isFirebaseConfigured = firebaseConfig.apiKey !== "" && !firebaseConfig.apiKey.includes("SUA_API_KEY");
 
-// Inicialização condicional
-let app, auth, db;
+let app: any, auth: any, db: any;
 if (isFirebaseConfigured) {
     try {
         app = initializeApp(firebaseConfig);
@@ -87,10 +84,9 @@ interface AuthContextType {
   isDemo: boolean;
 }
 
-// --- TRANSLATIONS & LANGUAGES ---
 type LanguageCode = 'pt' | 'en' | 'es';
 
-const TRANSLATIONS = {
+const TRANSLATIONS: Record<LanguageCode, any> = {
     pt: {
         welcome: 'Bem-vindo',
         login_subtitle: 'Faça login para acessar seu inventário',
@@ -163,7 +159,8 @@ const TRANSLATIONS = {
         approve: 'Aprovar',
         pending_approval: 'Aprovação Pendente',
         active_users: 'Usuários Ativos',
-        logout: 'Sair'
+        logout: 'Sair',
+        save_error: 'Erro ao salvar dados. Verifique o tamanho da imagem.'
     },
     en: {
         welcome: 'Welcome',
@@ -237,7 +234,8 @@ const TRANSLATIONS = {
         approve: 'Approve',
         pending_approval: 'Pending Approval',
         active_users: 'Active Users',
-        logout: 'Logout'
+        logout: 'Logout',
+        save_error: 'Error saving data. Check image size.'
     },
     es: {
         welcome: 'Bienvenido',
@@ -257,7 +255,7 @@ const TRANSLATIONS = {
         error_pending: 'Tu cuenta está en revisión. Espera la aprobación del administrador.',
         error_in_use: 'Este correo ya está en uso.',
         error_fill_all: 'Completa todos los campos.',
-        demo_mode: 'Modo Demo (Offline) Activo',
+        demo_mode: 'Modo Demo (Offline) Ativo',
         inventory: 'Inventario',
         items_count: 'artículos',
         logged_in_as: 'Conectado como',
@@ -311,19 +309,18 @@ const TRANSLATIONS = {
         approve: 'Aprobar',
         pending_approval: 'Aprobación Pendiente',
         active_users: 'Usuarios Activos',
-        logout: 'Salir'
+        logout: 'Salir',
+        save_error: 'Error al guardar los datos. Verifique el tamaño de la imagen.'
     }
 };
 
 interface LanguageContextType {
     language: LanguageCode;
     setLanguage: (lang: LanguageCode) => void;
-    t: (key: keyof typeof TRANSLATIONS.pt, params?: Record<string, string>) => string;
+    t: (key: string, params?: Record<string, string>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>(null!);
-
-// --- THEME & STYLES ---
 
 type ThemeName = 'pink' | 'blue' | 'mint' | 'lavender' | 'cream';
 type FontFamily = 'Poppins' | 'Roboto' | 'Playfair Display' | 'Dancing Script';
@@ -337,41 +334,11 @@ interface ThemeDefinition {
 }
 
 const THEMES: Record<ThemeName, ThemeDefinition> = {
-    pink: {
-        primary: '#f0d9e7',
-        shadowDark: '#d3b8c8',
-        shadowLight: '#ffffff',
-        accent: '#e5a9c5',
-        text: '#5b4b52'
-    },
-    blue: {
-        primary: '#e0f2f7',
-        shadowDark: '#beced4',
-        shadowLight: '#ffffff',
-        accent: '#81d4fa',
-        text: '#455a64'
-    },
-    mint: {
-        primary: '#e0f2f1',
-        shadowDark: '#bec9c8',
-        shadowLight: '#ffffff',
-        accent: '#80cbc4',
-        text: '#004d40'
-    },
-    lavender: {
-        primary: '#ede7f6',
-        shadowDark: '#c9c4d1',
-        shadowLight: '#ffffff',
-        accent: '#b39ddb',
-        text: '#4527a0'
-    },
-    cream: {
-        primary: '#fcfbf2',
-        shadowDark: '#d6d5ce',
-        shadowLight: '#ffffff',
-        accent: '#dce775',
-        text: '#5d4037'
-    }
+    pink: { primary: '#f0d9e7', shadowDark: '#d3b8c8', shadowLight: '#ffffff', accent: '#e5a9c5', text: '#5b4b52' },
+    blue: { primary: '#e0f2f7', shadowDark: '#beced4', shadowLight: '#ffffff', accent: '#81d4fa', text: '#455a64' },
+    mint: { primary: '#e0f2f1', shadowDark: '#bec9c8', shadowLight: '#ffffff', accent: '#80cbc4', text: '#004d40' },
+    lavender: { primary: '#ede7f6', shadowDark: '#c9c4d1', shadowLight: '#ffffff', accent: '#b39ddb', text: '#4527a0' },
+    cream: { primary: '#fcfbf2', shadowDark: '#d6d5ce', shadowLight: '#ffffff', accent: '#dce775', text: '#5d4037' }
 };
 
 interface ThemeContextType {
@@ -382,14 +349,10 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>(null!);
-
-// --- CONTEXT ---
 const AuthContext = createContext<AuthContextType>(null!);
 
-// --- HELPER FUNCTIONS ---
 const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-// LocalStorage Hook (only used in Demo Mode or for Settings)
 const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -414,6 +377,33 @@ const useLocalStorage = <T,>(key: string, initialValue: T): [T, React.Dispatch<R
   return [storedValue, setValue];
 };
 
+// Compress image more aggressively to stay under Firestore 1MB document limit
+const compressImage = (base64: string, maxWidth: number = 600): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = base64;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+                height *= maxWidth / width;
+                width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return reject('No context');
+            ctx.drawImage(img, 0, 0, width, height);
+            // Low quality (0.5) to ensure size stays small even for large mobile photos
+            resolve(canvas.toDataURL('image/jpeg', 0.5));
+        };
+        img.onerror = (e) => reject(e);
+    });
+};
+
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -428,6 +418,7 @@ const fileToBase64 = (file: File): Promise<string> => {
 const SettingsModal = ({ onClose }: { onClose: () => void }) => {
     const { theme, setTheme, font, setFont } = useContext(ThemeContext);
     const { language, setLanguage, t } = useContext(LanguageContext);
+    const { logout } = useContext(AuthContext);
 
     const themeOptions: {id: ThemeName, label: string}[] = [
         { id: 'pink', label: 'Rosa' },
@@ -440,8 +431,8 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
     const fontOptions: FontFamily[] = ['Poppins', 'Roboto', 'Playfair Display', 'Dancing Script'];
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content neumorphic">
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content neumorphic" onClick={e => e.stopPropagation()}>
                 <h3>{t('appearance')}</h3>
                 
                 <div className="form-group">
@@ -485,7 +476,8 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
                     </select>
                 </div>
 
-                <div className="modal-actions">
+                <div className="modal-actions" style={{ flexDirection: 'column', gap: '10px' }}>
+                    <button onClick={() => { logout(); onClose(); }} className="modal-btn neumorphic danger">{t('logout')}</button>
                     <button onClick={onClose} className="modal-btn neumorphic primary">{t('done')}</button>
                 </div>
             </div>
@@ -496,8 +488,8 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
 const ConfirmModal = ({ title, message, onConfirm, onCancel }: { title: string, message: string, onConfirm: () => void, onCancel: () => void }) => {
     const { t } = useContext(LanguageContext);
   return (
-    <div className="modal-overlay">
-      <div className="modal-content neumorphic">
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content neumorphic" onClick={e => e.stopPropagation()}>
         <h3>{title}</h3>
         <p style={{ textAlign: 'center', marginBottom: '20px' }}>{message}</p>
         <div className="modal-actions">
@@ -520,8 +512,8 @@ const CategoryModal = ({ onSave, onCancel, category }: { onSave: (name: string) 
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content neumorphic">
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-content neumorphic" onClick={e => e.stopPropagation()}>
         <h3>{category ? t('edit_category') : t('new_category')}</h3>
         <div className="form-group">
           <label htmlFor="categoryName">{t('category_name')}</label>
@@ -553,12 +545,12 @@ const ItemDetailsScreen = ({ item, onBack, onEdit, onDelete }: { item: MakeupIte
             <div className="header">
                 <button onClick={onBack} className="back-btn" aria-label={t('back')}>←</button>
                 <h2>{t('details')}</h2>
-                <div style={{width: '40px'}}></div> {/* Spacer */}
+                <div style={{width: '40px'}}></div>
             </div>
 
             <div className="details-container">
                 <div className="details-image-container neumorphic">
-                    {item.images.length > 0 ? (
+                    {item.images && item.images.length > 0 ? (
                         <img src={item.images[0]} alt={item.title} className="details-image" />
                     ) : (
                         <div className="details-no-image">{t('no_image')}</div>
@@ -577,7 +569,7 @@ const ItemDetailsScreen = ({ item, onBack, onEdit, onDelete }: { item: MakeupIte
                     {item.notes && (
                         <div className="details-notes neumorphic-inset">
                             <label>{t('notes')}:</label>
-                            <p>{item.notes}</p>
+                            <p style={{ whiteSpace: 'pre-wrap' }}>{item.notes}</p>
                         </div>
                     )}
                 </div>
@@ -604,40 +596,44 @@ const ItemDetailsScreen = ({ item, onBack, onEdit, onDelete }: { item: MakeupIte
     );
 };
 
-const ItemForm = ({ onSave, onCancel, onDelete, item, categoryId }: { onSave: (item: Omit<MakeupItem, 'id' | 'categoryId' | 'dateAdded'>, images: string[]) => void, onCancel: () => void, onDelete?: () => void, item?: MakeupItem, categoryId: string }) => {
+const ItemForm = ({ onSave, onCancel, item }: { onSave: (item: Omit<MakeupItem, 'id' | 'categoryId' | 'dateAdded'>) => void, onCancel: () => void, item?: MakeupItem }) => {
   const [title, setTitle] = useState(item?.title || '');
   const [notes, setNotes] = useState(item?.notes || '');
   const [images, setImages] = useState<string[]>(item?.images || []);
   const [tipo, setTipo] = useState(item?.tipo || '');
   const [marca, setMarca] = useState(item?.marca || '');
   const [cor, setCor] = useState(item?.cor || '');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const { t } = useContext(LanguageContext);
 
   const handleSave = () => {
     if (title.trim()) {
-      onSave({ title, notes, images, tipo, marca, cor }, images);
+      onSave({ title, notes, images, tipo, marca, cor });
     }
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const files = Array.from(event.target.files);
-      const base64Images = await Promise.all(files.map(fileToBase64));
-      setImages(prev => [...prev, ...base64Images]);
+    if (event.target.files && event.target.files.length > 0) {
+      setIsProcessingImage(true);
+      try {
+        const file = event.target.files[0];
+        const base64 = await fileToBase64(file);
+        // Smaller maxWidth and explicit compression quality 0.5
+        const compressed = await compressImage(base64, 600);
+        setImages([compressed]);
+      } catch (e) {
+        console.error("Erro ao processar imagem", e);
+        alert(t('save_error'));
+      } finally {
+        setIsProcessingImage(false);
+      }
     }
   };
   
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleConfirmDelete = () => {
-      if (onDelete) {
-          onDelete();
-      }
+  const removeImage = () => {
+    setImages([]);
   };
 
   return (
@@ -646,7 +642,9 @@ const ItemForm = ({ onSave, onCancel, onDelete, item, categoryId }: { onSave: (i
           <button onClick={onCancel} className="back-btn" aria-label={t('back')}>←</button>
           <h2>{item ? t('edit_item') : t('add_item')}</h2>
           <div style={{ display: 'flex', gap: '10px' }}>
-             <button onClick={handleSave} className="fab neumorphic" style={{ width: '40px', height: '40px', fontSize: '20px' }} aria-label={t('save')}>✓</button>
+             <button onClick={handleSave} disabled={isProcessingImage} className="fab neumorphic" style={{ width: '40px', height: '40px', fontSize: '20px' }}>
+                {isProcessingImage ? '...' : '✓'}
+             </button>
           </div>
         </div>
       <div className="form-group">
@@ -674,27 +672,18 @@ const ItemForm = ({ onSave, onCancel, onDelete, item, categoryId }: { onSave: (i
          <div className="image-preview-container">
             {images.map((img, index) => (
                 <div key={index} className="image-preview">
-                    <img src={img} alt="Pré-visualização do item de maquiagem" />
-                    <button onClick={() => removeImage(index)} className="remove-image-btn" aria-label="Remover imagem">x</button>
+                    {img ? <img src={img} alt="Preview" /> : null}
+                    <button onClick={removeImage} className="remove-image-btn" aria-label="Remover">x</button>
                 </div>
             ))}
          </div>
          <div className="image-actions">
             <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" onChange={handleFileChange} style={{ display: 'none' }} />
-            <input type="file" ref={fileInputRef} accept="image/*" multiple onChange={handleFileChange} style={{ display: 'none' }} />
+            <input type="file" ref={fileInputRef} accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
             <button onClick={() => cameraInputRef.current?.click()} className="image-btn neumorphic">{t('camera')}</button>
             <button onClick={() => fileInputRef.current?.click()} className="image-btn neumorphic">{t('gallery')}</button>
          </div>
        </div>
-
-       {showDeleteModal && (
-        <ConfirmModal
-            title={t('delete_item_title')}
-            message={t('delete_item_msg')}
-            onConfirm={handleConfirmDelete}
-            onCancel={() => setShowDeleteModal(false)}
-        />
-       )}
     </div>
   );
 };
@@ -712,13 +701,9 @@ const FilterModal = ({ brands, colors, activeFilters, onApply, onCancel }: { bra
         setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
     };
 
-    const handleApply = () => {
-        onApply({ brands: selectedBrands, colors: selectedColors });
-    };
-
     return (
-        <div className="modal-overlay">
-            <div className="modal-content neumorphic">
+        <div className="modal-overlay" onClick={onCancel}>
+            <div className="modal-content neumorphic" onClick={e => e.stopPropagation()}>
                 <h3>{t('filter')}</h3>
                 <div className="filter-section">
                     <h4>{t('filter_by_brand')}</h4>
@@ -742,189 +727,54 @@ const FilterModal = ({ brands, colors, activeFilters, onApply, onCancel }: { bra
                 </div>
                 <div className="modal-actions">
                     <button onClick={onCancel} className="modal-btn neumorphic">{t('cancel')}</button>
-                    <button onClick={handleApply} className="modal-btn neumorphic primary">{t('apply')}</button>
+                    <button onClick={() => onApply({ brands: selectedBrands, colors: selectedColors })} className="modal-btn neumorphic primary">{t('apply')}</button>
                 </div>
             </div>
         </div>
     );
 };
 
-interface UserData {
-    email: string;
-    uid: string;
-    isApproved: boolean;
-}
-
 const UserListModal = ({ onClose }: { onClose: () => void }) => {
-  const [users, setUsers] = useState<UserData[]>([]);
-  const [userToDelete, setUserToDelete] = useState<UserData | null>(null);
+  const [users, setUsers] = useState<{email: string, uid: string, isApproved: boolean}[]>([]);
   const { isDemo } = useContext(AuthContext);
   const { t } = useContext(LanguageContext);
 
   useEffect(() => {
-    if (isDemo) {
-        try {
-            const dbLocal = JSON.parse(window.localStorage.getItem('makeup_users_db') || '{}');
-            const list = Object.keys(dbLocal).map(email => ({
-                email, 
-                uid: email, 
-                isApproved: true // Demo users are always approved
-            }));
-            setUsers(list);
-        } catch (e) {
-            setUsers([]);
-        }
-    } else if (db) {
-        const fetchUsers = async () => {
-            try {
-                // Ensure the users collection is readable
-                const usersSnap = await getDocs(collection(db, 'users'));
-                const userList = usersSnap.docs.map(doc => ({
-                    email: doc.data().email,
-                    uid: doc.id,
-                    isApproved: doc.data().isApproved === true
-                }));
-                setUsers(userList);
-            } catch(e) {
-                console.error("Erro ao buscar usuários do firebase", e);
-                alert("Erro ao buscar usuários. Verifique o console e as regras do Firebase.");
-            }
-        };
-        fetchUsers();
-    }
+    if (isDemo || !db) return;
+    const unsub = onSnapshot(collection(db, 'users'), (snap) => {
+        setUsers(snap.docs.map(d => ({ email: d.data().email, uid: d.id, isApproved: !!d.data().isApproved })));
+    });
+    return unsub;
   }, [isDemo]);
 
-  const handleApproveUser = async (userToApprove: UserData) => {
-      if(isDemo) return;
-      try {
-          if(db) {
-              await updateDoc(doc(db, 'users', userToApprove.uid), {
-                  isApproved: true
-              });
-              setUsers(prev => prev.map(u => u.uid === userToApprove.uid ? {...u, isApproved: true} : u));
-          }
-      } catch (e) {
-          console.error("Erro ao aprovar usuário", e);
-          alert("Erro ao aprovar usuário");
-      }
+  const handleApprove = async (uid: string) => {
+    try {
+        await updateDoc(doc(db, 'users', uid), { isApproved: true });
+    } catch (e) { console.error(e); }
   };
 
-  const handleDeleteUser = async () => {
-      if (!userToDelete) return;
-
-      try {
-          if (isDemo) {
-              const dbLocal = JSON.parse(window.localStorage.getItem('makeup_users_db') || '{}');
-              delete dbLocal[userToDelete.email];
-              window.localStorage.setItem('makeup_users_db', JSON.stringify(dbLocal));
-              window.localStorage.removeItem(`makeup_inventory_${userToDelete.email}`);
-              setUsers(prev => prev.filter(u => u.email !== userToDelete.email));
-          } else if (db) {
-              const uid = userToDelete.uid;
-              await deleteDoc(doc(db, 'users', uid));
-              
-              const itemsRef = collection(db, `users/${uid}/items`);
-              const itemsSnap = await getDocs(itemsRef);
-              itemsSnap.forEach(d => deleteDoc(d.ref));
-              
-              const catsRef = collection(db, `users/${uid}/categories`);
-              const catsSnap = await getDocs(catsRef);
-              catsSnap.forEach(d => deleteDoc(d.ref));
-              
-              setUsers(prev => prev.filter(u => u.uid !== uid));
-          }
-          setUserToDelete(null);
-      } catch (e) {
-          console.error("Erro ao deletar usuário", e);
-      }
+  const handleDelete = async (uid: string) => {
+      if (!confirm(t('delete_user_title'))) return;
+      try { await deleteDoc(doc(db, 'users', uid)); } catch (e) { console.error(e); }
   };
-
-  const pendingUsers = users.filter(u => !u.isApproved);
-  const activeUsers = users.filter(u => u.isApproved);
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content neumorphic">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content neumorphic" onClick={e => e.stopPropagation()}>
         <h3>{t('users_title')}</h3>
-        <p style={{fontSize: '0.8rem', opacity: 0.6, marginBottom: '15px', textAlign: 'center'}}>
-           {isDemo ? t('demo_users') : t('firebase_users')}
-        </p>
-        
-        <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px' }}>
-            {users.length === 0 ? (
-                <p style={{textAlign: 'center', opacity: 0.7}}>{t('no_users')}</p>
-            ) : (
-                <>
-                {pendingUsers.length > 0 && (
-                    <div className="admin-list-section">
-                        <h4>{t('pending_approval')}</h4>
-                        <ul style={{listStyle: 'none', padding: 0}}>
-                            {pendingUsers.map(user => (
-                                <li key={user.uid} style={{padding: '10px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                    <span style={{wordBreak: 'break-all', fontSize: '0.9rem'}}>{user.email}</span>
-                                    <div style={{display: 'flex', gap: '5px'}}>
-                                        <button 
-                                            onClick={() => handleApproveUser(user)}
-                                            style={{
-                                                background: 'none', border: 'none', color: '#5cb85c', cursor: 'pointer', fontSize: '1.2rem', padding: '5px'
-                                            }}
-                                            title={t('approve')}
-                                        >
-                                            ✓
-                                        </button>
-                                        <button 
-                                            onClick={() => setUserToDelete(user)}
-                                            style={{
-                                                background: 'none', border: 'none', color: '#d9534f', cursor: 'pointer', fontSize: '1.2rem', padding: '5px'
-                                            }}
-                                            title={t('delete')}
-                                        >
-                                            ×
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {users.map(u => (
+                <div key={u.uid} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', borderBottom: '1px solid #eee' }}>
+                    <span style={{ fontSize: '0.8rem' }}>{u.email}</span>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                        {!u.isApproved && <button onClick={() => handleApprove(u.uid)} className="icon-btn success">✓</button>}
+                        <button onClick={() => handleDelete(u.uid)} className="icon-btn danger">×</button>
                     </div>
-                )}
-                
-                <div className="admin-list-section">
-                    <h4>{t('active_users')}</h4>
-                    <ul style={{listStyle: 'none', padding: 0}}>
-                        {activeUsers.map(user => (
-                            <li key={user.uid} style={{padding: '10px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                <span style={{wordBreak: 'break-all', fontSize: '0.9rem'}}>{user.email}</span>
-                                {user.email !== 'yagomdd@gmail.com' && (
-                                    <button 
-                                        onClick={() => setUserToDelete(user)}
-                                        style={{
-                                            background: 'none', border: 'none', color: '#d9534f', cursor: 'pointer', fontSize: '1.2rem', padding: '5px'
-                                        }}
-                                        title={t('delete')}
-                                    >
-                                        ×
-                                    </button>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
                 </div>
-                </>
-            )}
+            ))}
         </div>
-        <div className="modal-actions">
-            <button onClick={onClose} className="modal-btn neumorphic">{t('close')}</button>
-        </div>
+        <button onClick={onClose} className="modal-btn neumorphic" style={{ marginTop: '20px', width: '100%' }}>{t('close')}</button>
       </div>
-      
-      {userToDelete && (
-          <ConfirmModal 
-            title={t('delete_user_title')}
-            message={t('delete_user_msg', { email: userToDelete.email })}
-            onCancel={() => setUserToDelete(null)}
-            onConfirm={handleDeleteUser}
-          />
-      )}
     </div>
   );
 }
@@ -936,118 +786,47 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState('');
-  const [showUserList, setShowUserList] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     if (!email || !password) {
       setError(t('error_fill_all'));
       setLoading(false);
       return;
     }
-    
-    if (!isDemo && password.length < 6) {
-        setError(t('error_invalid')); // Generic error or add specific translation for password length
-        setLoading(false);
-        return;
-    }
-
     try {
-        if (isRegistering) {
-            await register(email, password);
-        } else {
-            await login(email, password);
-        }
+        if (isRegistering) await register(email, password);
+        else await login(email, password);
     } catch (e: any) {
-        console.error(e);
-        let msg = t('error_auth');
-        if (e.message === "ACCOUNT_PENDING") msg = t('error_pending');
-        else if (e.code === 'auth/invalid-credential') msg = t('error_invalid');
-        else if (e.code === 'auth/email-already-in-use') msg = t('error_in_use');
-        setError(msg);
-    } finally {
-        setLoading(false);
-    }
+        if (e.message === "ACCOUNT_PENDING") setError(t('error_pending'));
+        else setError(t('error_invalid'));
+    } finally { setLoading(false); }
   };
 
   return (
     <div className="screen login-screen">
       <div className="login-container neumorphic">
-        <div className="login-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100">
-             <rect width="100" height="100" rx="20" fill="#e5a9c5"/>
-             <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle" fontSize="60" fill="white" fontFamily="Poppins, sans-serif" fontWeight="bold">M</text>
-          </svg>
-        </div>
         <h2>{isRegistering ? t('create_account') : t('welcome')}</h2>
-        <p className="login-subtitle">
-            {isRegistering ? t('create_subtitle') : t('login_subtitle')}
-        </p>
-        
-        {isDemo && (
-             <div style={{fontSize: '0.7rem', color: '#666', marginBottom: '10px', background: '#eee', padding: '5px', borderRadius: '5px'}}>
-                 {t('demo_mode')}
-             </div>
-        )}
-
         <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email">{t('email')}</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input neumorphic-inset"
-              placeholder="seu@email.com"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">{t('password')}</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input neumorphic-inset"
-              placeholder="******"
-            />
-          </div>
-          
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="form-input neumorphic-inset" placeholder={t('email')} style={{marginBottom: '10px'}} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="form-input neumorphic-inset" placeholder={t('password')} style={{marginBottom: '15px'}} />
           {error && <p className="error-msg">{error}</p>}
-          
           <button type="submit" disabled={loading} className="modal-btn neumorphic primary login-btn">
             {loading ? t('loading') : (isRegistering ? t('register_btn') : t('login_btn'))}
           </button>
         </form>
-
-        <button 
-          onClick={() => { setError(''); setIsRegistering(!isRegistering); }} 
-          className="toggle-auth-btn"
-        >
+        <button onClick={() => { setError(''); setIsRegistering(!isRegistering); }} className="toggle-auth-btn">
           {isRegistering ? t('have_account') : t('no_account')}
         </button>
-
         <div className="lang-container">
             <button className={`lang-btn ${language === 'pt' ? 'active' : ''}`} onClick={() => setLanguage('pt')}>PT</button>
             <button className={`lang-btn ${language === 'en' ? 'active' : ''}`} onClick={() => setLanguage('en')}>EN</button>
             <button className={`lang-btn ${language === 'es' ? 'active' : ''}`} onClick={() => setLanguage('es')}>ES</button>
         </div>
-
-        {email === 'yagomdd@gmail.com' && (
-             <button 
-                onClick={() => setShowUserList(true)} 
-                style={{marginTop: '30px', background: 'none', border: 'none', fontSize: '0.8rem', opacity: 0.5, cursor: 'pointer', textDecoration: 'underline'}}
-            >
-                {t('admin_link')}
-            </button>
-        )}
       </div>
-      {showUserList && <UserListModal onClose={() => setShowUserList(false)} />}
     </div>
   );
 };
@@ -1064,74 +843,45 @@ const ItemListScreen = ({ category, items, onBack, onSaveItem, onDeleteItem, all
   const uniqueBrands = useMemo(() => Array.from(new Set(allItems.map(i => i.marca).filter(Boolean))), [allItems]);
   const uniqueColors = useMemo(() => Array.from(new Set(allItems.map(i => i.cor).filter(Boolean))), [allItems]);
 
-  const filteredAndSortedItems = useMemo(() => {
-    let processedItems = items
-      .filter(item => 
-          item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          item.notes.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .filter(item => {
-          const brandMatch = filters.brands.length === 0 || filters.brands.includes(item.marca);
-          const colorMatch = filters.colors.length === 0 || filters.colors.includes(item.cor);
-          return brandMatch && colorMatch;
-      });
-
-    const [key, direction] = sortOrder.split('-');
+  const filteredItems = useMemo(() => {
+    let list = items.filter(i => i.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (filters.brands.length) list = list.filter(i => filters.brands.includes(i.marca));
+    if (filters.colors.length) list = list.filter(i => filters.colors.includes(i.cor));
     
-    processedItems.sort((a, b) => {
-        let valA, valB;
-        if (key === 'title') {
-            valA = a.title.toLowerCase();
-            valB = b.title.toLowerCase();
-        } else if (key === 'category') {
-            return 0;
-        } else { // dateAdded
-            valA = a.dateAdded;
-            valB = b.dateAdded;
-        }
-
-        if (valA < valB) return direction === 'asc' ? -1 : 1;
-        if (valA > valB) return direction === 'asc' ? 1 : -1;
+    const [key, dir] = sortOrder.split('-');
+    list.sort((a, b) => {
+        let valA = (a as any)[key], valB = (b as any)[key];
+        if (typeof valA === 'string') { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
+        if (valA < valB) return dir === 'asc' ? -1 : 1;
+        if (valA > valB) return dir === 'asc' ? 1 : -1;
         return 0;
     });
-
-    return processedItems;
+    return list;
   }, [items, searchTerm, sortOrder, filters]);
 
-  // If editing, show form
   if (editingItem) {
     return (
       <ItemForm
-        categoryId={category.id}
         item={editingItem === 'new' ? undefined : editingItem}
         onCancel={() => setEditingItem(null)}
-        onSave={(newItemData, newImages) => {
-          onSaveItem(editingItem === 'new' ? null : editingItem, { ...newItemData, images: newImages });
-          setEditingItem(null);
-          if (editingItem !== 'new') {
-              setViewingItem(prev => prev ? {...prev, ...newItemData, images: newImages} : null);
+        onSave={async (data) => {
+          const success = await onSaveItem(editingItem === 'new' ? null : editingItem, data);
+          if (success) {
+            setEditingItem(null);
+            if (viewingItem) setViewingItem({ ...viewingItem, ...data });
           }
         }}
-        onDelete={editingItem !== 'new' ? () => {
-            onDeleteItem(editingItem.id);
-            setEditingItem(null);
-            setViewingItem(null);
-        } : undefined}
       />
     );
   }
 
-  // If viewing details, show details screen
   if (viewingItem) {
       return (
           <ItemDetailsScreen 
             item={viewingItem}
             onBack={() => setViewingItem(null)}
             onEdit={() => setEditingItem(viewingItem)}
-            onDelete={() => {
-                onDeleteItem(viewingItem.id);
-                setViewingItem(null);
-            }}
+            onDelete={() => { onDeleteItem(viewingItem.id); setViewingItem(null); }}
           />
       );
   }
@@ -1139,474 +889,238 @@ const ItemListScreen = ({ category, items, onBack, onSaveItem, onDeleteItem, all
   return (
     <div className="screen">
       <div className="header">
-         <button onClick={onBack} className="back-btn" aria-label={t('back')}>←</button>
+         <button onClick={onBack} className="back-btn">←</button>
         <h2>{category.name}</h2>
-        <button onClick={() => setEditingItem('new')} className="fab neumorphic" aria-label={t('add_item')}>+</button>
+        <button onClick={() => setEditingItem('new')} className="fab neumorphic">+</button>
       </div>
-      
       <div className="controls">
-          <div className="search-sort-container">
-             <input
-                type="text"
-                placeholder={t('search')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input neumorphic-inset"
-                aria-label="Buscar itens"
-            />
-            <button onClick={() => setShowFilterModal(true)} className="filter-btn neumorphic" aria-label="Filtrar itens">
-                {t('filter')}
-            </button>
-          </div>
-        
-        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="sort-select neumorphic-inset" aria-label="Ordenar itens">
+        <div className="search-sort-container">
+            <input type="text" placeholder={t('search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="search-input neumorphic-inset" />
+            <button onClick={() => setShowFilterModal(true)} className="filter-btn neumorphic">{t('filter')}</button>
+        </div>
+        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="sort-select neumorphic-inset">
           <option value="dateAdded-desc">{t('sort_date_desc')}</option>
           <option value="dateAdded-asc">{t('sort_date_asc')}</option>
           <option value="title-asc">{t('sort_az')}</option>
           <option value="title-desc">{t('sort_za')}</option>
         </select>
       </div>
-
       <div className="item-grid">
-        {filteredAndSortedItems.map(item => (
+        {filteredItems.map(item => (
           <div key={item.id} className="item-card neumorphic" onClick={() => setViewingItem(item)}>
-            <img src={item.images[0] || ''} alt={item.title} />
+            {item.images && item.images[0] ? <img src={item.images[0]} alt={item.title} /> : <div style={{width:'80px',height:'80px',background:'#ddd',borderRadius:'10px',marginBottom:'10px'}}></div>}
             <h4>{item.title}</h4>
             <p>{item.marca}</p>
           </div>
         ))}
       </div>
-       {showFilterModal && (
-            <FilterModal 
-                brands={uniqueBrands}
-                colors={uniqueColors}
-                activeFilters={filters}
-                onApply={(newFilters) => {
-                    setFilters(newFilters);
-                    setShowFilterModal(false);
-                }}
-                onCancel={() => setShowFilterModal(false)}
-            />
-        )}
+       {showFilterModal && <FilterModal brands={uniqueBrands} colors={uniqueColors} activeFilters={filters} onApply={(f) => { setFilters(f); setShowFilterModal(false); }} onCancel={() => setShowFilterModal(false)} />}
     </div>
   );
 };
 
-
-const CategoryListScreen = ({ 
-    data, 
-    onSelectCategory, 
-    onSaveCategory, 
-    onDeleteCategory 
-}: {
-    data: AppData,
-    onSelectCategory: (c: Category) => void,
-    onSaveCategory: (c: Category | null, name: string) => void,
-    onDeleteCategory: (id: string) => void
-}) => {
-  const [editingCategory, setEditingCategory] = useState<Category | null | 'new'>(null);
-  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+const CategoryListScreen = ({ data, onSelectCategory, onSaveCategory, onDeleteCategory }: any) => {
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [deletingCategory, setDeletingCategory] = useState<any>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [showUserList, setShowUserList] = useState(false);
-  const { logout, user } = useContext(AuthContext);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const { user } = useContext(AuthContext);
   const { t } = useContext(LanguageContext);
 
-  const handleSave = (name: string) => {
-    onSaveCategory(editingCategory === 'new' ? null : editingCategory, name);
-    setEditingCategory(null);
-  };
-
-  const handleConfirmDelete = () => {
-    if (deletingCategory) {
-      onDeleteCategory(deletingCategory.id);
-      setDeletingCategory(null);
-    }
-  };
-  
   return (
     <div className="screen">
       <div className="header">
         <h1>{t('inventory')}</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-            {user?.email === 'yagomdd@gmail.com' && (
-                <button onClick={() => setShowUserList(true)} className="fab neumorphic" style={{ fontSize: '14px', width: 'auto', padding: '0 10px' }} title="Admin">
-                    🛡️
-                </button>
-            )}
-             <button onClick={logout} className="fab neumorphic" style={{ fontSize: '14px', width: 'auto', padding: '0 15px' }}>
-                {t('logout')}
-             </button>
-             <button onClick={() => setEditingCategory('new')} className="fab neumorphic" aria-label={t('new_category')}>+</button>
+        <div style={{display: 'flex', gap: '10px'}}>
+            {user?.email === 'yagomdd@gmail.com' && <button onClick={() => setShowAdmin(true)} className="fab neumorphic" style={{fontSize: '14px', width: 'auto', padding: '0 10px'}}>🛡️</button>}
+            <button onClick={() => setEditingCategory('new')} className="fab neumorphic">+</button>
         </div>
       </div>
-      <p style={{marginBottom: '20px', fontSize: '0.9rem', opacity: 0.8}}>{t('logged_in_as')}: {user?.email}</p>
       <div className="card-list">
-        {data.categories.length === 0 && (
-            <p style={{ textAlign: 'center', opacity: 0.5, marginTop: '20px' }}>{t('no_categories')}</p>
-        )}
-        {data.categories.map(category => (
-          <div key={category.id} className="card neumorphic">
-            <div className="card-content" onClick={() => onSelectCategory(category)}>
-              <h3>{category.name}</h3>
-              <p>{data.items.filter(i => i.categoryId === category.id).length} {t('items_count')}</p>
+        {data.categories.map((c: any) => (
+          <div key={c.id} className="card neumorphic" onClick={() => onSelectCategory(c)}>
+            <div className="card-content">
+              <h3>{c.name}</h3>
+              <p>{data.items.filter((i: any) => i.categoryId === c.id).length} {t('items_count')}</p>
             </div>
             <div className="card-actions">
-                <button 
-                  onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setEditingCategory(category); 
-                  }} 
-                  className="icon-btn" 
-                  aria-label={t('edit')}
-                >
-                    ✎
-                </button>
-                <button 
-                  onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setDeletingCategory(category); 
-                  }} 
-                  className="icon-btn delete" 
-                  aria-label={t('delete')}
-                >
-                    ×
-                </button>
+                <button onClick={(e) => { e.stopPropagation(); setEditingCategory(c); }} className="icon-btn">✎</button>
+                <button onClick={(e) => { e.stopPropagation(); setDeletingCategory(c); }} className="icon-btn delete">×</button>
             </div>
           </div>
         ))}
       </div>
-
-      <button className="settings-fab neumorphic" onClick={() => setShowSettings(true)} aria-label={t('appearance')}>
-        ⚙
-      </button>
-
-      {editingCategory && (
-        <CategoryModal
-          category={editingCategory === 'new' ? undefined : editingCategory}
-          onCancel={() => setEditingCategory(null)}
-          onSave={handleSave}
-        />
-      )}
-      {deletingCategory && (
-        <ConfirmModal
-          title={t('delete_cat_title')}
-          message={t('delete_cat_msg', { name: deletingCategory.name })}
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setDeletingCategory(null)}
-        />
-      )}
-      {showSettings && (
-          <SettingsModal onClose={() => setShowSettings(false)} />
-      )}
-      {showUserList && <UserListModal onClose={() => setShowUserList(false)} />}
+      <button className="settings-fab neumorphic" onClick={() => setShowSettings(true)}>⚙</button>
+      {editingCategory && <CategoryModal category={editingCategory === 'new' ? undefined : editingCategory} onCancel={() => setEditingCategory(null)} onSave={(n) => { onSaveCategory(editingCategory === 'new' ? null : editingCategory, n); setEditingCategory(null); }} />}
+      {deletingCategory && <ConfirmModal title={t('delete_cat_title')} message={t('delete_cat_msg', { name: deletingCategory.name })} onConfirm={() => { onDeleteCategory(deletingCategory.id); setDeletingCategory(null); }} onCancel={() => setDeletingCategory(null)} />}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showAdmin && <UserListModal onClose={() => setShowAdmin(false)} />}
     </div>
   );
 };
 
 const MainApp = () => {
   const { user, isDemo } = useContext(AuthContext);
-  
-  // Local state for app data (sync with Firebase/Local)
+  const { t } = useContext(LanguageContext);
   const [data, setData] = useState<AppData>({ categories: [], items: [] });
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
-
-  // DEMO MODE PERSISTENCE
   const storageKey = user ? `makeup_inventory_${user.email}` : 'makeup_inventory_temp';
   const [localData, setLocalData] = useLocalStorage<AppData>(storageKey, { categories: [], items: [] });
 
-  // FIREBASE / DEMO LISTENER
   useEffect(() => {
-    if (isDemo || !user?.uid || !db) {
-        setData(localData);
-        return;
-    }
-
-    // Real-time listeners for Firebase
-    const catsQuery = collection(db, `users/${user.uid}/categories`);
-    const itemsQuery = collection(db, `users/${user.uid}/items`);
-
-    const unsubCats = onSnapshot(catsQuery, (snap) => {
-        const cats = snap.docs.map(d => ({id: d.id, ...d.data()})) as Category[];
-        setData(prev => ({...prev, categories: cats}));
+    if (isDemo || !user?.uid || !db) { setData(localData); return; }
+    const unsubCats = onSnapshot(collection(db, `users/${user.uid}/categories`), (snap) => {
+        setData(prev => ({ ...prev, categories: snap.docs.map(d => ({ id: d.id, ...d.data() })) as Category[] }));
     });
-
-    const unsubItems = onSnapshot(itemsQuery, (snap) => {
-        const items = snap.docs.map(d => ({id: d.id, ...d.data()})) as MakeupItem[];
-        setData(prev => ({...prev, items: items}));
+    const unsubItems = onSnapshot(collection(db, `users/${user.uid}/items`), (snap) => {
+        setData(prev => ({ ...prev, items: snap.docs.map(d => ({ id: d.id, ...d.data() })) as MakeupItem[] }));
     });
-
-    return () => {
-        unsubCats();
-        unsubItems();
-    };
-
+    return () => { unsubCats(); unsubItems(); };
   }, [isDemo, user, localData]);
 
-  const handleSaveCategory = async (category: Category | null, name: string) => {
+  const handleSaveCategory = async (cat: Category | null, name: string) => {
     try {
         if (isDemo) {
-            setLocalData(prev => {
-                if (category) {
-                    return { ...prev, categories: prev.categories.map(c => c.id === category.id ? { ...c, name } : c) };
-                } else {
-                    const newCategory = { id: generateId(), name };
-                    return { ...prev, categories: [...prev.categories, newCategory] };
-                }
-            });
+            const newList = cat ? localData.categories.map(c => c.id === cat.id ? { ...c, name } : c) : [...localData.categories, { id: generateId(), name }];
+            setLocalData({ ...localData, categories: newList });
         } else if (user?.uid && db) {
-            if (category) {
-                await setDoc(doc(db, `users/${user.uid}/categories`, category.id), { name }, { merge: true });
-            } else {
-                const newRef = doc(collection(db, `users/${user.uid}/categories`));
-                await setDoc(newRef, { name, id: newRef.id });
-            }
+            const id = cat?.id || generateId();
+            await setDoc(doc(db, `users/${user.uid}/categories`, id), { name, id });
         }
-    } catch (e: any) {
-        alert("Erro ao salvar categoria: " + e.message);
-        console.error(e);
+    } catch (e) { 
+        console.error("Rejeição ao salvar categoria:", e); 
+        alert(t('save_error'));
     }
   };
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (isDemo) {
-        setLocalData(prev => ({
-            categories: prev.categories.filter(c => c.id !== categoryId),
-            items: prev.items.filter(i => i.categoryId !== categoryId),
-        }));
-    } else if (user?.uid && db) {
-        await deleteDoc(doc(db, `users/${user.uid}/categories`, categoryId));
+  const handleDeleteCategory = async (id: string) => {
+    try {
+        if (isDemo) setLocalData({ categories: localData.categories.filter(c => c.id !== id), items: localData.items.filter(i => i.categoryId !== id) });
+        else await deleteDoc(doc(db, `users/${user.uid}/categories`, id));
+    } catch (e) { console.error("Rejeição ao deletar categoria:", e); }
+  };
+
+  const handleSaveItem = async (item: MakeupItem | null, update: any) => {
+    try {
+        const id = item?.id || generateId();
+        const catId = activeCategory?.id || item?.categoryId;
+        if (!catId) return false;
+
+        if (isDemo) {
+            const newItem = { ...update, id, categoryId: catId, dateAdded: item?.dateAdded || Date.now() };
+            const newList = item ? localData.items.map(i => i.id === item.id ? newItem : i) : [...localData.items, newItem];
+            setLocalData({ ...localData, items: newList });
+            return true;
+        } else if (user?.uid && db) {
+            // Document write will fail if size > 1MB. compressImage logic should prevent this.
+            await setDoc(doc(db, `users/${user.uid}/items`, id), { ...update, id, categoryId: catId, dateAdded: item?.dateAdded || Date.now() });
+            return true;
+        }
+        return false;
+    } catch (e) { 
+        console.error("Rejeição ao salvar item:", e); 
+        alert(t('save_error'));
+        return false;
     }
   };
-  
-  const handleSaveItem = async (item: MakeupItem | null, newItemData: Omit<MakeupItem, 'id' | 'categoryId' | 'dateAdded'>) => {
-      if(!activeCategory) return;
 
-      if (isDemo) {
-        setLocalData(prev => {
-            if(item){ 
-                return {...prev, items: prev.items.map(i => i.id === item.id ? {...i, ...newItemData} : i)}
-            } else { 
-                const newItem: MakeupItem = {
-                    ...newItemData,
-                    id: generateId(),
-                    categoryId: activeCategory.id,
-                    dateAdded: Date.now()
-                }
-                return {...prev, items: [...prev.items, newItem]};
-            }
-        });
-      } else if (user?.uid && db) {
-          if (item) {
-              await setDoc(doc(db, `users/${user.uid}/items`, item.id), newItemData, { merge: true });
-          } else {
-              const newRef = doc(collection(db, `users/${user.uid}/items`));
-              await setDoc(newRef, {
-                  ...newItemData,
-                  id: newRef.id,
-                  categoryId: activeCategory.id,
-                  dateAdded: Date.now()
-              });
-          }
-      }
-  }
-  
-  const handleDeleteItem = async (itemId: string) => {
-      if (isDemo) {
-        setLocalData(prev => ({...prev, items: prev.items.filter(i => i.id !== itemId)}));
-      } else if (user?.uid && db) {
-        await deleteDoc(doc(db, `users/${user.uid}/items`, itemId));
-      }
-  }
+  const handleDeleteItem = async (id: string) => {
+    try {
+        if (isDemo) setLocalData({ ...localData, items: localData.items.filter(i => i.id !== id) });
+        else await deleteDoc(doc(db, `users/${user.uid}/items`, id));
+    } catch (e) { console.error("Rejeição ao deletar item:", e); }
+  };
 
-  if (activeCategory) {
-    return (
-      <ItemListScreen
-        category={activeCategory}
-        items={data.items.filter(i => i.categoryId === activeCategory.id)}
-        onBack={() => setActiveCategory(null)}
-        onSaveItem={handleSaveItem}
-        onDeleteItem={handleDeleteItem}
-        allItems={data.items}
-      />
-    );
-  }
-
-  return (
-    <CategoryListScreen
-      data={data}
-      onSelectCategory={setActiveCategory}
-      onSaveCategory={handleSaveCategory}
-      onDeleteCategory={handleDeleteCategory}
-    />
-  );
+  return activeCategory ? <ItemListScreen category={activeCategory} items={data.items.filter(i => i.categoryId === activeCategory.id)} onBack={() => setActiveCategory(null)} onSaveItem={handleSaveItem} onDeleteItem={handleDeleteItem} allItems={data.items} /> 
+                        : <CategoryListScreen data={data} onSelectCategory={setActiveCategory} onSaveCategory={handleSaveCategory} onDeleteCategory={handleDeleteCategory} />;
 };
 
-const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+// Explicitly made children optional
+const AuthProvider = ({ children }: { children?: React.ReactNode }) => {
     const isDemo = !isFirebaseConfigured;
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (isDemo) {
-            const savedUser = window.localStorage.getItem('makeup_active_user');
-            if (savedUser) setUser(JSON.parse(savedUser));
+            const saved = window.localStorage.getItem('makeup_active_user');
+            if (saved) setUser(JSON.parse(saved));
             setLoading(false);
         } else if (auth) {
-            const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-                if (firebaseUser) {
-                    // Check approval status on auth state change (e.g. page refresh)
-                    // Note: Ideally this is checked at login, but good to have here too
-                    // if permissions change.
-                    setUser({ email: firebaseUser.email || '', uid: firebaseUser.uid });
-                } else {
-                    setUser(null);
-                }
+            return onAuthStateChanged(auth, async (u) => {
+                if (u) setUser({ email: u.email || '', uid: u.uid });
+                else setUser(null);
                 setLoading(false);
             });
-            return unsubscribe;
-        } else {
-            setLoading(false);
-        }
+        } else setLoading(false);
     }, [isDemo]);
 
     const login = async (email: string, password?: string) => {
         if (isDemo) {
-            const usersDb = JSON.parse(window.localStorage.getItem('makeup_users_db') || '{}');
-            if (!usersDb[email] || usersDb[email].password !== password) {
-                 if(!usersDb[email]) throw new Error('Usuário não encontrado.');
-                 throw new Error('Senha incorreta.');
-            }
-            const newUser = { email };
-            setUser(newUser);
-            window.localStorage.setItem('makeup_active_user', JSON.stringify(newUser));
-        } else if (auth) {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password || '');
-            const uid = userCredential.user.uid;
-            
-            // Check Approval Status in Firestore
-            if (db) {
-                const userDoc = await getDoc(doc(db, 'users', uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    // Admin is always approved
-                    if (!userData.isApproved && email !== 'yagomdd@gmail.com') {
-                        await signOut(auth); // Log them out immediately
-                        throw new Error("ACCOUNT_PENDING");
-                    }
-                } else {
-                     // Create doc if it doesn't exist (legacy users or error case)
-                     // Admin gets auto approved
-                     const isAdmin = email === 'yagomdd@gmail.com';
-                     await setDoc(doc(db, 'users', uid), {
-                        email: email,
-                        uid: uid,
-                        isApproved: isAdmin,
-                        createdAt: Date.now()
-                    });
-                    if (!isAdmin) {
-                        await signOut(auth);
-                        throw new Error("ACCOUNT_PENDING");
-                    }
-                }
+            const dbL = JSON.parse(window.localStorage.getItem('makeup_users_db') || '{}');
+            if (!dbL[email] || dbL[email].password !== password) throw new Error('Invalid');
+            setUser({ email });
+            window.localStorage.setItem('makeup_active_user', JSON.stringify({ email }));
+        } else {
+            const cred = await signInWithEmailAndPassword(auth, email, password || '');
+            const uDoc = await getDoc(doc(db, 'users', cred.user.uid));
+            if (!uDoc.exists() || (!uDoc.data().isApproved && email !== 'yagomdd@gmail.com')) {
+                await signOut(auth);
+                throw new Error("ACCOUNT_PENDING");
             }
         }
     };
 
     const register = async (email: string, password: string) => {
         if (isDemo) {
-            const usersDb = JSON.parse(window.localStorage.getItem('makeup_users_db') || '{}');
-            if (usersDb[email]) throw new Error('Usuário já existe.');
-            
-            usersDb[email] = { password };
-            window.localStorage.setItem('makeup_users_db', JSON.stringify(usersDb));
-            
-            const newUser = { email };
-            setUser(newUser);
-            window.localStorage.setItem('makeup_active_user', JSON.stringify(newUser));
-        } else if (auth && db) {
+            const dbL = JSON.parse(window.localStorage.getItem('makeup_users_db') || '{}');
+            if (dbL[email]) throw new Error('Exists');
+            dbL[email] = { password };
+            window.localStorage.setItem('makeup_users_db', JSON.stringify(dbL));
+            setUser({ email });
+            window.localStorage.setItem('makeup_active_user', JSON.stringify({ email }));
+        } else {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
-            const isAdmin = email === 'yagomdd@gmail.com';
-            
-            // Create user doc with approval status
-            await setDoc(doc(db, 'users', cred.user.uid), {
-                email: email,
-                uid: cred.user.uid,
-                isApproved: isAdmin, // Only admin is auto-approved
-                createdAt: Date.now()
-            });
-
-            if (!isAdmin) {
-                // Sign out immediately if not admin
-                await signOut(auth);
-                throw new Error("ACCOUNT_PENDING");
-            }
+            const isAdm = email === 'yagomdd@gmail.com';
+            await setDoc(doc(db, 'users', cred.user.uid), { email, uid: cred.user.uid, isApproved: isAdm, createdAt: Date.now() });
+            if (!isAdm) { await signOut(auth); throw new Error("ACCOUNT_PENDING"); }
         }
-    }
+    };
 
     const logout = () => {
-        if (isDemo) {
-            setUser(null);
-            window.localStorage.removeItem('makeup_active_user');
-        } else if (auth) {
-            signOut(auth);
-        }
+        if (isDemo) { setUser(null); window.localStorage.removeItem('makeup_active_user'); }
+        else signOut(auth);
     };
 
-    return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading, isDemo }}>
-            {children}
-        </AuthContext.Provider>
-    );
+    return <AuthContext.Provider value={{ user, login, register, logout, loading, isDemo }}>{children}</AuthContext.Provider>;
 };
 
-const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
+// Explicitly made children optional
+const LanguageProvider = ({ children }: { children?: React.ReactNode }) => {
     const [language, setLanguage] = useLocalStorage<LanguageCode>('makeup_app_lang', 'pt');
-
-    const t = (key: keyof typeof TRANSLATIONS.pt, params?: Record<string, string>) => {
-        let text = TRANSLATIONS[language][key] || TRANSLATIONS['pt'][key] || key;
-        if (params) {
-            Object.keys(params).forEach(param => {
-                text = text.replace(`{${param}}`, params[param]);
-            });
-        }
+    const t = (key: string, params?: any) => {
+        let text = (TRANSLATIONS[language] as any)?.[key] || (TRANSLATIONS['pt'] as any)?.[key] || key;
+        if (params) Object.keys(params).forEach(p => { text = text.replace(`{${p}}`, params[p]); });
         return text;
     };
-
-    return (
-        <LanguageContext.Provider value={{ language, setLanguage, t }}>
-            {children}
-        </LanguageContext.Provider>
-    );
+    return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>;
 };
 
-const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+// Explicitly made children optional
+const ThemeProvider = ({ children }: { children?: React.ReactNode }) => {
     const [theme, setTheme] = useLocalStorage<ThemeName>('makeup_app_theme', 'pink');
     const [font, setFont] = useLocalStorage<FontFamily>('makeup_app_font', 'Poppins');
-
     useEffect(() => {
         const root = document.documentElement;
-        const currentTheme = THEMES[theme];
-
-        // Apply Colors
-        root.style.setProperty('--primary-color', currentTheme.primary);
-        root.style.setProperty('--shadow-dark', currentTheme.shadowDark);
-        root.style.setProperty('--shadow-light', currentTheme.shadowLight);
-        root.style.setProperty('--accent-color', currentTheme.accent);
-        root.style.setProperty('--text-color', currentTheme.text);
-
-        // Apply Font
+        const cur = THEMES[theme];
+        root.style.setProperty('--primary-color', cur.primary);
+        root.style.setProperty('--shadow-dark', cur.shadowDark);
+        root.style.setProperty('--shadow-light', cur.shadowLight);
+        root.style.setProperty('--accent-color', cur.accent);
+        root.style.setProperty('--text-color', cur.text);
         root.style.setProperty('--font-family', `"${font}", sans-serif`);
-
-        // Update meta theme-color for browser address bar
-        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', currentTheme.primary);
-
     }, [theme, font]);
-
-    return (
-        <ThemeContext.Provider value={{ theme, setTheme, font, setFont }}>
-            {children}
-        </ThemeContext.Provider>
-    );
+    return <ThemeContext.Provider value={{ theme, setTheme, font, setFont }}>{children}</ThemeContext.Provider>;
 };
 
 const App = () => {
@@ -1623,14 +1137,8 @@ const App = () => {
 
 const AppContent = () => {
     const { user, loading } = useContext(AuthContext);
-
-    if (loading) return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>Loading...</div>;
-    
-    if (!user) {
-        return <LoginScreen />;
-    }
-
-    return <MainApp />;
+    if (loading) return <div className="screen" style={{justifyContent: 'center', alignItems: 'center'}}>Loading...</div>;
+    return user ? <MainApp /> : <LoginScreen />;
 };
 
 const root = createRoot(document.getElementById('root') as HTMLElement);
